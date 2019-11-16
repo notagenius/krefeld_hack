@@ -4,9 +4,12 @@
 
 http://3.209.31.93:5001/classifier
 
-### POST is with Json, images should be encoded as base64 in string 
+### POST is with json, images should be encoded as base64 in string 
 
 {"in_base64_string": base64_string}
+
+### Result in json:
+{"metal": "0.0%", "cardboard": "0.06%", "top_result": "paper", "plastic": "0.98%", "glass": "0.42%", "others": "0.77%", "paper": "97.78%"}
 
 python example
 
