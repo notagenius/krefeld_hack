@@ -12,8 +12,9 @@ from __future__ import print_function, division
 
 from flask import Flask, request, jsonify
 import base64
-
-
+from io import StringIO,BytesIO
+import json
+import re
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -21,7 +22,6 @@ from torch.optim import lr_scheduler
 import numpy as np
 import torchvision
 from torchvision import datasets, models, transforms
-import matplotlib.pyplot as plt
 import time
 import os
 import copy
@@ -34,21 +34,56 @@ def img_to_base64(img_filepath):
      return base64.b64encode(open(img_filepath, 'rb').read())
 
 def base64_to_image(base64_str):
-    base64_data = re.sub('^data:image/.+;base64,', '', base64_str)
-    binary_data = base64.b64decode(base64_data)
-    img_data = StringIO(binary_data)
+    #base64_data = re.sub('^data:image/.+;base64,', '', base64_str)
+    #binary_data = base64.b64decode(base64_data)
+    ENCODING = 'utf-8'
+    base64_in = base64_str.encode(ENCODING)
+
+    img_data = BytesIO(base64_in)
     return img_data
+
+def base64_to_image_2(base64_str, image_path='tmp.jpg'):
+    byte_data = base64.b64decode(base64_str)
+    image_data = BytesIO(byte_data)
+    img = Image.open(image_data)
+    if image_path:
+        img.save(image_path)
+    return image_path
 
 def my_eval(model, inputs):
     model.eval()
+    data = {}
 
     with torch.no_grad():
-        inputs = inputs.to('cuda:0')
+        inputs = inputs.to('cpu')
 
         outputs = model(inputs)
         _, preds = torch.max(outputs, 1)
+        if preds == 0:
+                data['top_result'] = 'cardboard'
+        elif preds == 1:
+                data['top_result'] = 'glass'
+        elif preds == 2:
+                data['top_result'] = 'metal'
+        elif preds == 3:
+                data['top_result'] = 'paper'
+        elif preds == 4:
+                data['top_result'] = 'plastic'
+        elif preds == 5:
+                data['top_result'] = 'others'
+        p = torch.nn.functional.softmax(outputs, dim=1)
+        li=(p*100).tolist()
+        li=li[0]
+        data['cardboard'] =str(float("{0:.2f}".format(li[0])))+'%'
+        data['glass'] =str(float("{0:.2f}".format(li[1])))+'%'
+        data['metal'] =str(float("{0:.2f}".format(li[2])))+'%'
+        data['paper'] =str(float("{0:.2f}".format(li[3])))+'%'
+        data['plastic'] =str(float("{0:.2f}".format(li[4])))+'%'
+        data['others'] =str(float("{0:.2f}".format(li[5])))+'%'
 
-    return preds
+        json_data = json.dumps(data)
+
+    return json_data
 
 loader = transforms.Compose([transforms.Resize(256),
         transforms.CenterCrop(224),
@@ -64,9 +99,9 @@ def image_loader(image_name):
     #return image.cuda()  #assumes that you're using GPU
     return image
 
-#image = image_loader('krefeld_hack/classifier/Garbage_datasets/val/paper/paper1.jpg')
-#model = torch.load('krefeld_hack/model')
-#print(my_eval(model, image))
+image = image_loader('classifier/Garbage_datasets/val/paper/paper1.jpg')
+model = torch.load('model',map_location='cpu')
+print(my_eval(model, image))
 
 print(socket.gethostbyname(socket.getfqdn(socket.gethostname())))
 app = Flask(__name__)
@@ -76,13 +111,15 @@ app = Flask(__name__)
 @app.route('/classifier', methods=['GET','POST'])
 def classifier():
      base64_in=request.json["in_base64_string"]
-     ENCODING = 'utf-8'
-     base64_in = base64_in.encode(ENCODING)
-     image = image_loader(base64_to_image(base64_in))
-     model = torch.load('model')
+     #ENCODING = 'utf-8'
+     #base64_in = base64_in.encode(ENCODING)
+     
+     #image = image_loader(base64_in)
+     image = image_loader(base64_to_image_2(base64_in))
+     model = torch.load('model',map_location='cpu')
      result=my_eval(model, image)
      return result
 
 if __name__ == '__main__':
-    app.run(host= '0.0.0.0', debug=False)
+    app.run(host= '0.0.0.0', port=5001, debug=False)
 

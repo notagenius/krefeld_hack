@@ -7,10 +7,6 @@ Original file is located at
     https://colab.research.google.com/drive/11747VygvJk751ENzzuHOQD-xEYre5idI
 """
 
-!rm -rf krefeld_hack
-!git clone https://github.com/notagenius/krefeld_hack
-!export CUDA_LAUNCH_BLOCKING=1
-
 import requests
 import base64
 from PIL import Image
@@ -21,7 +17,7 @@ def img_to_base64(img_filepath):
      return base64.b64encode(open(img_filepath, 'rb').read())
 
 # test run. jpeg to base64 bytes
-filepath = 'krefeld_hack/classifier/Garbage_datasets/val/paper/paper1.jpg'
+filepath = 'classifier/Garbage_datasets/val/paper/paper1.jpg'
 encoded_base64 = img_to_base64(filepath)
 
 
@@ -32,7 +28,7 @@ base64_string = encoded_base64.decode(ENCODING)
 raw_data = {"in_base64_string": base64_string}
 json_data = json.dumps(raw_data)
 headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-r2 = requests.post("http://172.28.0.2/classifier", json_data, headers=headers)
+r2 = requests.post("http://3.209.31.93:5001/classifier", json_data, headers=headers)
 end = time.time()
 print(r2.text)
-print("base64_json costs time: ", end - start)
+#print("base64_json costs time: ", end - start)

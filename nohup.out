@@ -1,0 +1,10 @@
+{"glass": "0.42%", "top_result": "paper", "cardboard": "0.06%", "metal": "0.0%", "paper": "97.78%", "plastic": "0.98%", "others": "0.77%"}
+172.31.39.61
+ * Serving Flask app "flask_server" (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: off
+ * Running on http://0.0.0.0:5001/ (Press CTRL+C to quit)
+35.193.231.210 - - [16/Nov/2019 06:45:29] "POST /classifier HTTP/1.1" 200 -
+35.193.231.210 - - [16/Nov/2019 06:45:33] "POST /classifier HTTP/1.1" 200 -
